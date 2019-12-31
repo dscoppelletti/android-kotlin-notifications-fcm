@@ -28,44 +28,113 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     /**
      * Called when message is received.
      *
-     * @param remoteMessage Object representing the message received from Firebase Cloud Messaging.
+     * @param remoteMessage Object representing the message received from
+     *                      Firebase Cloud Messaging.
      */
     // [START receive_message]
-    override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
-        Log.d(TAG, "From: ${remoteMessage?.from}")
+        Log.d(TAG, "From: ${remoteMessage.from}")
 
-        // TODO Step 3.5 check messages for data
+        /* DOC STEP 3.5
+        If your app is in the background, the FCM message will trigger an
+        automatic notification and the onMessageReceived() function will receive
+        the remoteMessage object only when the user clicks the notification.
+
+        Maximum payload for both message types is 4KB (except when sending
+        messages from the Firebase console, which enforces a 1024 character
+        limit).
+        DOC END STEP 3.5 */
+
+        // TODO STEP 3.5 - Check messages for data
         // Check if message contains a data payload.
+        remoteMessage.data.let {
+            Log.d(TAG, "Message data payload: " + remoteMessage.data)
+        }
+        // TODO END STEP 3.5
 
+        /* DOC STEP 3.6
+        App behavior when receiving messages that include both notification and
+        data payloads depends on whether the app is in the background or the
+        foreground—essentially, whether or not it is active at the time of
+        receipt.
 
-        // TODO Step 3.6 check messages for notification and call sendNotification
+        1) When in the background, if the message has a notification payload,
+        the notification is automatically shown in the notification tray. If the
+        message also has a data payload, the data payload will be handled by the
+        app when the user taps on the notification.
+
+        2) When in the foreground, if the message notification has payloads, the
+        notification will not appear automatically. The app needs to decide how
+        to handle the notification in the onMessageReceived() function. If the
+        message also has data payload, both payloads will be handled by the app.
+
+        For the purpose of this codelab, you want to remind the app user to have
+        some eggs for breakfast. You are not planning to send any data, but you
+        also want to make sure the reminder notification shows up whether the
+        app is in foreground or background.
+
+        When you send an FCM message to devices on which the egg timer app is
+        installed, the notification message will be shown automatically if the
+        app is not running (or in the background). However, if the app is
+        running and in the foreground, then the notification is not shown
+        automatically, and instead, the app code decides what to do with the
+        message. If the app is in the foreground when it receives an FCM
+        message, the onMessageReceived() function will be triggered
+        automatically with the FCM message. This is where your app can silently
+        handle notification and data payloads or trigger a notification.
+        DOC END STEP 3.6 */
+
+        // TODO STEP 3.6 - Check messages for notification and call
+        // sendNotification
         // Check if message contains a notification payload.
+        remoteMessage.notification?.let {
+            Log.d(TAG, "Message Notification Body: ${it.body}")
+            sendNotification(it.body!!)
+        }
+        // TODO END STEP 3.6
 
     }
     // [END receive_message]
 
-    //TODO Step 3.2 log registration token
+    // TODO STEP 3.2 - Log registration token
     // [START on_new_token]
+    /**
+     * Called if InstanceID token is updated. This may occur if the security of
+     * the previous token had been compromised. Note that this is called when
+     * the InstanceID token is initially generated so this is where you would
+     * retrieve the token.
+     */
+    override fun onNewToken(token: String) {
+        Log.d(TAG, "Refreshed token: $token")
 
+        // If you want to send messages to this application instance or
+        // manage this apps subscriptions on the server side, send the
+        // Instance ID token to your app server.
+//        sendRegistrationToServer(token)
+    }
     // [END on_new_token]
 
-    /**
-     * Persist token to third-party (your app) servers.
-     *
-     * @param token The new token.
-     */
-    private fun sendRegistrationToServer(token: String?) {
-        // TODO: Implement this method to send token to your app server.
-    }
+//    /**
+//     * Persist token to third-party (your app) servers.
+//     *
+//     * @param token The new token.
+//     */
+//    private fun sendRegistrationToServer(token: String?) {
+//        // Implement this method to send token to your app server.
+//    }
+    // TODO END STEP 3.2
 
     /**
-     * Create and show a simple notification containing the received FCM message.
+     * Create and show a simple notification containing the received FCM
+     * message.
      *
      * @param messageBody FCM message body received.
      */
     private fun sendNotification(messageBody: String) {
-        val notificationManager = ContextCompat.getSystemService(applicationContext, NotificationManager::class.java) as NotificationManager
+        val notificationManager = ContextCompat.getSystemService(
+                applicationContext, NotificationManager::class.java) as
+                NotificationManager
         notificationManager.sendNotification(messageBody, applicationContext)
     }
 
